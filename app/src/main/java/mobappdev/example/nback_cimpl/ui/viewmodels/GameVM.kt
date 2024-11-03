@@ -16,6 +16,9 @@ import kotlinx.coroutines.launch
 import mobappdev.example.nback_cimpl.GameApplication
 import mobappdev.example.nback_cimpl.NBackHelper
 import mobappdev.example.nback_cimpl.data.UserPreferencesRepository
+import android.media.AudioAttributes
+import android.media.SoundPool
+import androidx.test.core.app.ApplicationProvider
 
 /**
  * This is the GameViewModel.
@@ -44,6 +47,7 @@ interface GameViewModel {
     fun startGame()
 
     fun checkMatch()
+    fun goToHomeScreen()
 }
 
 class GameVM(
@@ -70,6 +74,14 @@ class GameVM(
     private val nBackHelper = NBackHelper()  // Helper that generate the event array
     private var events = emptyArray<Int>()  // Array with all events
 
+    private lateinit var soundPool: SoundPool
+    private val soundMap = mutableMapOf<Int, Int>()
+
+
+    private val _gameOn = MutableStateFlow(false)
+    val gameOn: StateFlow<Boolean> = _gameOn.asStateFlow()
+
+
     override fun setGameType(gameType: GameType) {
         // update the gametype in the gamestate
         _gameState.value = _gameState.value.copy(gameType = gameType)
@@ -79,9 +91,11 @@ class GameVM(
         job?.cancel()  // Cancel any existing game loop
 
         // Get the events from our C-model (returns IntArray, so we need to convert to Array<Int>)
-        events = nBackHelper.generateNBackString(10, 9, 30, nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
+        events = nBackHelper.generateNBackString(31, 9, 30, nBack).toList().toTypedArray()  // Todo Higher Grade: currently the size etc. are hardcoded, make these based on user input
         Log.d("GameVM", "The following sequence was generated: ${events.contentToString()}")
 
+
+        _gameOn.value =true
         job = viewModelScope.launch {
             when (gameState.value.gameType) {
                 GameType.Audio -> runAudioGame()
@@ -92,23 +106,50 @@ class GameVM(
         }
     }
 
-    override fun checkMatch() {
-        /**
-         * Todo: This function should check if there is a match when the user presses a match button
-         * Make sure the user can only register a match once for each event.
-         */
+    override fun goToHomeScreen() {
+        _gameOn.value = false
+        _gameState.value = _gameState.value.copy(gameEnded = true)
     }
+
+    override fun checkMatch() {
+        val currentEvent = gameState.value.eventValue
+        val nBackEvent = events.getOrNull(gameState.value.eventNumber - nBack)
+
+        if (currentEvent == nBackEvent) {
+            _score.value += 1
+            updateHighScore()
+        } else {
+            // Optionally, implement logic to penalize for incorrect matches
+            // _score.value = max(0, _score.value - 1) // Prevent negative score
+        }
+    }
+
     private fun runAudioGame() {
-        // Todo: Make work for Basic grade
+        job = viewModelScope.launch {
+            for (value in events) {
+                _gameState.value = _gameState.value.copy(eventValue = value)
+                delay(eventInterval)
+            }
+            goToHomeScreen()
+        }
     }
 
     private suspend fun runVisualGame(events: Array<Int>){
-        // Todo: Replace this code for actual game code
-        for (value in events) {
-            _gameState.value = _gameState.value.copy(eventValue = value)
+        for ((index, value) in events.withIndex()) {
+            _gameState.value = _gameState.value.copy(eventValue = value, eventNumber = index)
             delay(eventInterval)
         }
+            goToHomeScreen()
+    }
 
+    private fun updateHighScore() {
+        if (_score.value > _highscore.value) {
+            _highscore.value = _score.value
+            Log.d("GameVM", "New High Score: ${_highscore.value}") // Log new high score
+            viewModelScope.launch {
+                userPreferencesRepository.saveHighScore(_highscore.value)
+            }
+        }
     }
 
     private fun runAudioVisualGame(){
@@ -144,7 +185,9 @@ enum class GameType{
 data class GameState(
     // You can use this state to push values from the VM to your UI.
     val gameType: GameType = GameType.Visual,  // Type of the game
-    val eventValue: Int = -1  // The value of the array string
+    val eventValue: Int = -1,  // The value of the array string
+    val eventNumber: Int = 0,
+    val gameEnded: Boolean = false
 )
 
 class FakeVM: GameViewModel{
@@ -163,6 +206,7 @@ class FakeVM: GameViewModel{
     override fun startGame() {
     }
 
+    override fun goToHomeScreen(){}
     override fun checkMatch() {
     }
 }
