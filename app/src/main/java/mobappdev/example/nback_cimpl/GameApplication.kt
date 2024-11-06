@@ -33,8 +33,25 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(
 class GameApplication: Application() {
     lateinit var userPreferencesRespository: UserPreferencesRepository
 
-    override fun onCreate() {
+  /*  override fun onCreate() {
         super.onCreate()
+        userPreferencesRespository = UserPreferencesRepository(dataStore)
+    }*/
+    companion object {
+        // Static method to get application context
+        fun getAppContext(): Context {
+            return instance.applicationContext
+        }
+
+        private lateinit var instance: GameApplication
+
+        // Method to provide application context from the Application class
+        fun getInstance(): GameApplication {
+            return instance
+        }
+    } override fun onCreate() {
+        super.onCreate()
+        instance = this // Initialize the singleton instance
         userPreferencesRespository = UserPreferencesRepository(dataStore)
     }
 }

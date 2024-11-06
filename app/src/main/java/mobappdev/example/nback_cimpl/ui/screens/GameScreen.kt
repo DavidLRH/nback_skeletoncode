@@ -23,6 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import mobappdev.example.nback_cimpl.ui.viewmodels.FakeVM
+import mobappdev.example.nback_cimpl.ui.viewmodels.GameType
 import mobappdev.example.nback_cimpl.ui.viewmodels.GameViewModel
 
 @Composable
@@ -51,6 +52,7 @@ fun GameScreen(vm: GameViewModel) {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                if(gameState.gameType == GameType.Visual){
                 repeat(3) { row ->
                     Row(horizontalArrangement = Arrangement.SpaceEvenly) {
                         repeat(3) { col ->
@@ -65,12 +67,26 @@ fun GameScreen(vm: GameViewModel) {
                         }
                     }
                 }
-            }
+            }else{repeat(3) { row ->
+                    Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                        repeat(3) { col ->
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .padding(2.dp)
+                                    .background(Color.Gray)
+                            )
+                        }
+                    }
+                }
+
+
+                }            }
 
             Button(
                 onClick = { vm.checkMatch() },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Green,
+                    containerColor = if (gameState.isMatchButtonError) Color.Red else Color.Green,
                     contentColor = Color.White
                 )
             )

@@ -51,10 +51,8 @@ class MainActivity : ComponentActivity() {
                     // Observe if the game has started
                     val isGameStarted by gameViewModel.gameOn.collectAsState()
 
+                    isGameScreenVisible = isGameStarted
                     // Update the visibility of the game screen based on the game state
-                    if (isGameStarted) {
-                        isGameScreenVisible = true
-                    }
 
                     // Conditional rendering of screens
                     if (isGameScreenVisible) {

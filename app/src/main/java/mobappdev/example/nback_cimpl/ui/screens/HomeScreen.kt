@@ -60,6 +60,11 @@ fun Settings(vm: GameViewModel){
     val nBackValue = vm.nBack
     val interval = 2000L
     val nmrOfEvents = 30
+
+
+
+
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -99,6 +104,7 @@ fun HomeScreen(
     val snackBarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackBarHostState) }
     ) {
@@ -126,13 +132,13 @@ fun HomeScreen(
                     Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (gameState.eventValue != -1) {
+                 /*   if (gameState.eventValue != -1) {
                         Text(
                             modifier = Modifier.fillMaxWidth(),
                             text = "Current Event Value: ${gameState.eventValue}",
                             textAlign = TextAlign.Center
                         )
-                    }
+                    }*/
                     // Start game button
                     Button(
                         onClick = {
@@ -145,7 +151,7 @@ fun HomeScreen(
                             }
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.Gray,
+                            containerColor = Color.Green,
                             contentColor = Color.White
                         )
                     ) {
